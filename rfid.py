@@ -34,8 +34,8 @@ import subprocess
 
 # Change this to the port displayed in your Arduino IDE
 # It will be com3 or something for Windows...
-serial_port = '/dev/tty.usbserial-A70064Mh'
-baud_rate = 9600
+serial_port = '/dev/cu.usbmodem1451'
+baud_rate = 115200
 
 # Define the db path to ./rfids.db, relative to this file
 sql_file = os.path.join(os.path.dirname(__file__), 'tags.db')
@@ -102,20 +102,26 @@ def run_server():
         while True:
             char = com.read()
             # Read characters from serial until we hit line endings
-            if char != '\r' and char != '\n' and len(chars) <= 10:
+
+            if char != '\r' and char != '\n':
                 chars.append(char)
                 # If we have 10 characters, then we have an RFID tag
-                if len(chars) >= 10:
-                    tag_id = ''.join(chars[:10])
-                    print 'Checking tag:', tag_id
-                    cursor = db_connection.cursor()
-                    cursor.execute('SELECT * FROM rfid_tags WHERE tag_id = ?', (tag_id,))
-                    record = cursor.fetchone()
-                    if record and record['is_enabled']:
-                        access_granted(com)
-                    else:
-                        access_denied(com)
+                # if len(chars) >= 10:
+                #     tag_id = ''.join(chars[:10])
+                #     print 'Checking tag:', tag_id
+                #     cursor = db_connection.cursor()
+                #     cursor.execute('SELECT * FROM rfid_tags WHERE tag_id = ?', (tag_id,))
+                #     record = cursor.fetchone()
+                #     if record and record['is_enabled']:
+                #         access_granted(com)
+                #     else:
+                #         access_denied(com)
             else:
+                s = "".join(chars)
+                print s
+                if "epc" in s:
+                    raw_input("Press enter to continue")
+                    com.write("continue")
                 # Reset buffer
                 chars = []
     except serial.SerialException:
